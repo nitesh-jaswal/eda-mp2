@@ -1,0 +1,10 @@
+---
+title: "Mini Project 2"
+author: "Ankit Mathur, Nitesh Singh Jaswal"
+date: "March 16, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
