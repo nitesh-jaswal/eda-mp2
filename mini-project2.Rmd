@@ -6,5 +6,37 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(tidy = TRUE, warning = FALSE, echo = FALSE)
+library(foreign)
+library(tidyverse)
+library(broom)
+library(data.table)
 ```
+
+```{r}
+# Load Data
+dfp_WTHH = read.csv("DFP_WTHH_release.csv")
+names(dfp_WTHH)[1] <- "rowid"
+dfp = dfp_WTHH %>% select(rowid, house3, presvote16post, weight_DFP, M4A, GREENJOB, WEALTH, MARLEG, ICE, GUNS, gender)
+# Setting NAs for presvote to 3
+dfp[is.na(dfp$presvote16post), "presvote16post"] <- 3
+summary(dfp)
+n_row = nrow(dfp)
+```
+
+```{r}
+is_swing_voter <- function() {
+  vect = as.numeric(rep.int(1, times = n_row))
+  for(i in 1:n_row) {
+    if(dfp$presvote16post[i] == 1 && dfp$house3[i] == 1)
+      vect[i] = 2
+    else if(dfp$presvote16post[i] == 2 && dfp$house3[i] == 2)
+      vect[i] = 3
+  }
+  return(vect)
+}
+# 1 = Swing, 2 = Loyal Demo, 3 = Loyal Rep
+dfp$is_swing = is_swing_voter()
+```
+
+
