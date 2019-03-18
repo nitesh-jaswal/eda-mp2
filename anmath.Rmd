@@ -1,0 +1,50 @@
+---
+title: "Project 2"
+author: "Ankit Mathur"
+date: "3/17/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, tidy = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(broom)
+cb_palette = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+```
+
+```{r}
+WTHH_full = read_csv("DFP_WTHH_release.csv")
+WTHH = WTHH_full[c("presvote16post", "house3", "weight_DFP", "M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS", "POP_1", "POP_2", "POP_3")]
+```
+
+```{r}
+WTHH$grp <- ifelse(WTHH$presvote16post==1 & WTHH$house3==1, "Loyal Democrats", ifelse(WTHH$presvote16post==2 & WTHH$house3==2, "Loyal Republicans", ifelse(!(WTHH$presvote16post %in% c(7,NA)), "Swing voters", NA)))
+WTHH$swing_bhv <- ifelse(WTHH$grp=="Swing voters", ifelse(WTHH$house3==1, "Switch to D", ifelse(WTHH$house3==2, "Switch to R", "Others")), NA)
+
+cols <- c("presvote16post", "house3", "M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS", "POP_1", "POP_2", "POP_3", "grp", "swing_bhv")
+WTHH[cols] <- lapply(WTHH[cols], factor)
+```
+
+# Solution 2:
+```{r}
+WTHH.long = gather(WTHH, key="issue", value="response",
+                   c("M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS"))
+cols <- c("issue", "response")
+WTHH.long[cols] <- lapply(WTHH.long[cols], factor)
+WTHH.long <- WTHH.long[c("issue", "response", "grp", "weight_DFP")]
+WTHH.long <- WTHH.long[!is.na(WTHH.long$response) & !is.na(WTHH.long$grp),]
+
+ggplot(WTHH.long, aes(x=response)) + stat_count(aes(fill=grp, weight=weight_DFP)) +
+  facet_wrap(~issue) + scale_fill_manual(values=cb_palette)
+```
+
+## Swing voters behave similar to Loyal Democrats on issues such as GREENJOB, GUNS, M4A, WEALTH, MARLEG
+## Swing voters behave similar to Loyal Republicans on issues such as ICE
+
+```{r}
+
+```
+
