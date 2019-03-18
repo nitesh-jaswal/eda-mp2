@@ -17,12 +17,15 @@ library(data.table)
 # Load Data
 dfp_WTHH = read.csv("DFP_WTHH_release.csv")
 names(dfp_WTHH)[1] <- "rowid"
-dfp = dfp_WTHH %>% select(rowid, house3, presvote16post, weight_DFP, M4A, GREENJOB, WEALTH, MARLEG, ICE, GUNS, gender)
-# Setting NAs for presvote to 3
-dfp[is.na(dfp$presvote16post), "presvote16post"] <- 3
+dfp = dfp_WTHH %>% select(rowid, house3, presvote16post, weight_DFP, M4A, GREENJOB, WEALTH, MARLEG, ICE, GUNS, POP_1, POP_2, POP_3, gender)
+# Removing NAs or 7 (Did not vote) for presvote16post
+dfp =  dfp[!(is.na(dfp$presvote16post) | dfp$presvote16post == 7),]
 summary(dfp)
 n_row = nrow(dfp)
+
 ```
+
+
 ```{r}
 is_swing_voter <- function() {
   vect = as.numeric(rep.int(1, times = n_row))
@@ -31,12 +34,21 @@ is_swing_voter <- function() {
       vect[i] = 2
     else if(dfp$presvote16post[i] == 2 && dfp$house3[i] == 2)
       vect[i] = 3
+    else if(dfp$presvote16post[i] == 1 && dfp$house3[i] == 2)
+      vect[i] = 4
+    else if(dfp$presvote16post[i] == 2 && dfp$house3[i] == 1)
+      vect[i] = 5
   }
   return(vect)
 }
-# 1 = Swing, 2 = Loyal Demo, 3 = Loyal Rep
+# 1 = Swing, 2 = Loyal Demo, 3 = Loyal Rep, 4 = Switch to R, 5 = Switch to D
 dfp$is_swing = is_swing_voter()
-dfp$is_swing = factor(dfp$is_swing, labels = c("Swing", "Loyal Democrat", "Loyal Republican"))
+dfp$is_swing = factor(dfp$is_swing, labels = c("Swing", "Loyal Democrat", "Loyal Republican", "Switch to D", "Switch to R"))
 ```
+
+```{r}
+
+```
+
 
 
