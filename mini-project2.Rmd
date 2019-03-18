@@ -57,8 +57,8 @@ ggpairs(dfp.q1, aes(color = is_swing), columns = c("is_swing", "M4A", "GREENJOB"
 dfp.q1 = gather(dfp.q1, key = "ISSUE", value = "RESPONSE", c("M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS"))
 ggplot(dfp.q1, aes(x = RESPONSE, fill = is_swing)) + stat_count((aes(weight = weight_DFP))) + facet_wrap(~ISSUE) + scale_x_continuous() 
 ```
-Switch to D voters show a strong opinion for GREENJOB, GUNS and WELATH.
-Switch to R voters show a strong opinion for ICE
+Switch to D voters show a strong opinion for GREENJOB, GUNS, M4A and WELATH.
+Switch to R voters show a strong opinion for ICE and M4A.
 Switch to R and Switch to D voters show a strong difference in opinion for M4A.
 Switch to R and Switch to D voters behave similarly for MARLEG. 
 
