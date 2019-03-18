@@ -22,9 +22,15 @@ summary(WTHH)
 ```
 
 ```{r}
-WTHH$swinger <- ifelse(!(WTHH$presvote16post %in% c(7,NA)), ifelse((WTHH$presvote16post==1 & WTHH$presvote16post==1) | (WTHH$presvote16post==2 & WTHH$presvote16post==2), 0, 1), NA)
-# WTHH$swing_bhv <- ifelse(WTHH$presvote16post==1 & WTHH$house3==1, "Loyal Democrats", ifelse(WTHH$presvote16post==2 & WTHH$house3==2, "Loyal Republicans", ifelse(WTHH$presvote16post==1 & WTHH$house3==2, "Switch to R", ifelse(WTHH$presvote16post==2 & WTHH$house3==1, "Switch to D", ))))
+WTHH$grp <- ifelse(WTHH$presvote16post==1 & WTHH$house3==1, "Loyal Democrats", ifelse(WTHH$presvote16post==2 & WTHH$house3==2, "Loyal Republicans", ifelse(!(WTHH$presvote16post %in% c(7,NA)), "Swing voters", NA)))
+WTHH$swing_bhv <- ifelse(WTHH$grp=="Swing voters", ifelse(WTHH$house3==1, "Switch to D", ifelse(WTHH$house3==2, "Switch to R", "Others")), NA)
+WTHH$swing_bhv <- as.factor(WTHH$swing_bhv)
+WTHH$grp <- as.factor(WTHH$grp)
+summary(WTHH)
 ```
 
+```{r}
+
+```
 
 
