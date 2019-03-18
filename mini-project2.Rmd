@@ -23,7 +23,6 @@ dfp[is.na(dfp$presvote16post), "presvote16post"] <- 3
 summary(dfp)
 n_row = nrow(dfp)
 ```
-
 ```{r}
 is_swing_voter <- function() {
   vect = as.numeric(rep.int(1, times = n_row))
@@ -37,6 +36,7 @@ is_swing_voter <- function() {
 }
 # 1 = Swing, 2 = Loyal Demo, 3 = Loyal Rep
 dfp$is_swing = is_swing_voter()
+dfp$is_swing = factor(dfp$is_swing, labels = c("Swing", "Loyal Democrat", "Loyal Republican"))
 ```
 
 
