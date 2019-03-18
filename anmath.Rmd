@@ -24,8 +24,9 @@ summary(WTHH)
 ```{r}
 WTHH$grp <- ifelse(WTHH$presvote16post==1 & WTHH$house3==1, "Loyal Democrats", ifelse(WTHH$presvote16post==2 & WTHH$house3==2, "Loyal Republicans", ifelse(!(WTHH$presvote16post %in% c(7,NA)), "Swing voters", NA)))
 WTHH$swing_bhv <- ifelse(WTHH$grp=="Swing voters", ifelse(WTHH$house3==1, "Switch to D", ifelse(WTHH$house3==2, "Switch to R", "Others")), NA)
-WTHH$swing_bhv <- as.factor(WTHH$swing_bhv)
-WTHH$grp <- as.factor(WTHH$grp)
+
+cols <- c("presvote16post", "house3", "M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS", "POP_1", "POP_2", "POP_3", "grp", "swing_bhv")
+WTHH[cols] <- lapply(WTHH[cols], factor)
 summary(WTHH)
 ```
 
