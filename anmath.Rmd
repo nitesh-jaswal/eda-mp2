@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = FALSE, tidy = TRUE, warning = FALSE, message = FALS
 ```{r}
 library(tidyverse)
 library(broom)
-library(GGally)
+library(arm)
 cb_palette = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 ```
 
@@ -54,7 +54,7 @@ As for the immigration issue, while **Loyal Democrats** do not seem to have any 
 # Solution 3:
 ```{r}
 WTHH$swing_voter = ifelse(WTHH$grp=="Swing voters", 1, ifelse(is.na(WTHH$grp), NA, 0))
-WTHH.issue = WTHH[c("GREENJOB", "GUNS", "ICE", "M4A", "MARLEG", "WEALTH", "swing_voter")]
+WTHH.issue = WTHH[c("GREENJOB", "GUNS", "ICE", "M4A", "MARLEG", "WEALTH", "weight_DFP", "swing_voter")]
 ```
 
 ```{r}
@@ -62,3 +62,33 @@ WTHH.issue <- WTHH.issue[rowSums(WTHH.issue[,c(1,2,3,4,5,6)] == 6) == 0,]
 WTHH.issue <- WTHH.issue[complete.cases(WTHH.issue),]
 ```
 
+```{r}
+WTHH.issue.long = gather(WTHH.issue, key="issue", value="response",
+                   c("M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS"))
+ggplot(WTHH.issue.long, aes(x=response, y=swing_voter)) + geom_point(alpha=0.4) +
+  geom_jitter(height=0.1, width=0.25) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial")) +
+  facet_wrap(~issue)
+```
+
+
+```{r}
+WTHH.issue.logit1 <- glm(swing_voter ~ GREENJOB, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
+display(WTHH.issue.logit1)
+```
+
+With just the GREENJOB issue as the predictor, we observe that:
+$$
+\textrm{logit[P(Swing voter)]} = -2.04 + 0.17 \times \textrm{GREENJOB}
+$$
+Using the "divide by 4" rule, we can say that moving one level closer to opposing the GREENJOB issue increases the model probability of being **Swing voter** by 4.25%
+
+```{r}
+WTHH.issue.logit <- glm(swing_voter ~ GREENJOB + GUNS + ICE + M4A + MARLEG + WEALTH, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
+display(WTHH.issue.logit)
+```
+
+```{r}
+# WTHH.issue.logit <- glm(swing_voter ~ GREENJOB * GUNS * ICE * M4A * MARLEG * WEALTH, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
+# display(WTHH.issue.logit)
+```
