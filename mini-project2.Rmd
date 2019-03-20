@@ -12,6 +12,8 @@ library(tidyverse)
 library(broom)
 library(data.table)
 library(GGally)
+
+cb_palette = c("#E69F00", "#56B4E9")
 ```
 
 ```{r}
@@ -23,7 +25,6 @@ dfp = dfp_WTHH %>% select(rowid, house3, presvote16post, weight_DFP, M4A, GREENJ
 dfp =  dfp[!(is.na(dfp$presvote16post) | dfp$presvote16post == 7),]
 # summary(dfp)
 n_row = nrow(dfp)
-
 ```
 
 
@@ -55,10 +56,12 @@ ggpairs(dfp.q1, aes(color = is_swing), columns = c("is_swing", "M4A", "GREENJOB"
 
 ```{r message = FALSE, warning = FALSE}
 dfp.q1 = gather(dfp.q1, key = "ISSUE", value = "RESPONSE", c("M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS"))
-ggplot(dfp.q1, aes(x = RESPONSE, fill = is_swing)) + stat_count((aes(weight = weight_DFP))) + facet_wrap(~ISSUE) + scale_x_continuous() 
+dfp.q1$RESPONSE = factor(dfp.q1$RESPONSE)
+dfp.q1 = na.omit(dfp.q1)
+ggplot(dfp.q1, aes(x = RESPONSE, color = is_swing, fill = is_swing)) + stat_count((aes(weight = weight_DFP))) + facet_wrap(~ISSUE) + theme_bw() + guides(fill = guide_legend(title="Swing Voters"), color = FALSE) + scale_fill_manual(values = cb_palette) + labs(title="Some title") + ylab("COUNT")
 ```
 Switch to D voters show a strong opinion for GREENJOB, GUNS, M4A and WELATH.
 Switch to R voters show a strong opinion for ICE and M4A.
 Switch to R and Switch to D voters show a strong difference in opinion for M4A.
 Switch to R and Switch to D voters behave similarly for MARLEG. 
-
+```
