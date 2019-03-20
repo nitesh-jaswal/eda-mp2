@@ -11,18 +11,22 @@ library(foreign)
 library(tidyverse)
 library(broom)
 library(data.table)
+library(GGally)
 ```
 
 ```{r}
 # Load Data
 dfp_WTHH = read.csv("DFP_WTHH_release.csv")
 names(dfp_WTHH)[1] <- "rowid"
-dfp = dfp_WTHH %>% select(rowid, house3, presvote16post, weight_DFP, M4A, GREENJOB, WEALTH, MARLEG, ICE, GUNS, gender)
-# Setting NAs for presvote to 3
-dfp[is.na(dfp$presvote16post), "presvote16post"] <- 3
-summary(dfp)
+dfp = dfp_WTHH %>% select(rowid, house3, presvote16post, weight_DFP, M4A, GREENJOB, WEALTH, MARLEG, ICE, GUNS, POP_1, POP_2, POP_3, gender)
+# Removing NAs or 7 (Did not vote) for presvote16post
+dfp =  dfp[!(is.na(dfp$presvote16post) | dfp$presvote16post == 7),]
+# summary(dfp)
 n_row = nrow(dfp)
+
 ```
+
+
 ```{r}
 is_swing_voter <- function() {
   vect = as.numeric(rep.int(1, times = n_row))
@@ -31,12 +35,30 @@ is_swing_voter <- function() {
       vect[i] = 2
     else if(dfp$presvote16post[i] == 2 && dfp$house3[i] == 2)
       vect[i] = 3
+    else if(dfp$presvote16post[i] != 2 && dfp$house3[i] == 2)
+      vect[i] = 4
+    else if(dfp$presvote16post[i] != 1 && dfp$house3[i] == 1)
+      vect[i] = 5
   }
   return(vect)
 }
-# 1 = Swing, 2 = Loyal Demo, 3 = Loyal Rep
+# 1 = Swing, 2 = Loyal Demo, 3 = Loyal Rep, 4 = Switch to R, 5 = Switch to D
 dfp$is_swing = is_swing_voter()
-dfp$is_swing = factor(dfp$is_swing, labels = c("Swing", "Loyal Democrat", "Loyal Republican"))
+dfp$is_swing = factor(dfp$is_swing, labels = c("Swing", "Loyal Democrat", "Loyal Republican", "Switch to R", "Switch to D"))
+
 ```
 
+```{r message = FALSE, warning = FALSE}
+dfp.q1 = dfp %>% subset(., subset = (.$is_swing == "Switch to R" | (.$is_swing == "Switch to D")), select = c("is_swing", "M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS", "weight_DFP"))
+ggpairs(dfp.q1, aes(color = is_swing), columns = c("is_swing", "M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS"))
+```
+
+```{r message = FALSE, warning = FALSE}
+dfp.q1 = gather(dfp.q1, key = "ISSUE", value = "RESPONSE", c("M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS"))
+ggplot(dfp.q1, aes(x = RESPONSE, fill = is_swing)) + stat_count((aes(weight = weight_DFP))) + facet_wrap(~ISSUE) + scale_x_continuous() 
+```
+Switch to D voters show a strong opinion for GREENJOB, GUNS, M4A and WELATH.
+Switch to R voters show a strong opinion for ICE and M4A.
+Switch to R and Switch to D voters show a strong difference in opinion for M4A.
+Switch to R and Switch to D voters behave similarly for MARLEG. 
 
