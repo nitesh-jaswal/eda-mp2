@@ -73,13 +73,24 @@ ggplot(WTHH.issue.long, aes(x=response, y=swing_voter)) + geom_point(alpha=0.4) 
 
 
 ```{r}
-WTHH.issue.logit1 <- glm(swing_voter ~ GREENJOB, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
+WTHH.issue.logit1 <- glm(swing_voter ~ WEALTH, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
 display(WTHH.issue.logit1)
 ```
 
 With just the GREENJOB issue as the predictor, we observe that:
 $$
 \textrm{logit[P(Swing voter)]} = -2.04 + 0.17 \times \textrm{GREENJOB}
+$$
+Using the "divide by 4" rule, we can say that moving one level closer to opposing the GREENJOB issue increases the model probability of being **Swing voter** by 4.25%
+
+```{r}
+WTHH.issue.logit2 <- glm(swing_voter ~ GREENJOB + GUNS, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
+display(WTHH.issue.logit2)
+```
+
+With GREENJOB and GUNS issues as the predictors, we observe that:
+$$
+\textrm{logit[P(Swing voter)]} = -2.06 + 0.16 \times \textrm{GREENJOB} + 0.01 \times \textrm{GUNS}
 $$
 Using the "divide by 4" rule, we can say that moving one level closer to opposing the GREENJOB issue increases the model probability of being **Swing voter** by 4.25%
 
@@ -91,4 +102,22 @@ display(WTHH.issue.logit)
 ```{r}
 # WTHH.issue.logit <- glm(swing_voter ~ GREENJOB * GUNS * ICE * M4A * MARLEG * WEALTH, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
 # display(WTHH.issue.logit)
+```
+
+```{r}
+WTHH.pop = WTHH[c("POP_1", "POP_2", "POP_3", "weight_DFP", "swing_voter")]
+```
+
+```{r}
+WTHH.pop <- WTHH.pop[rowSums(WTHH.pop[,c(1,2,3)] == 6) == 0,]
+WTHH.pop <- WTHH.pop[complete.cases(WTHH.pop),]
+```
+
+```{r}
+WTHH.pop.long = gather(WTHH.pop, key="populism", value="response",
+                   c("POP_1", "POP_2", "POP_3"))
+ggplot(WTHH.pop.long, aes(x=response, y=swing_voter)) + geom_point(alpha=0.4) +
+  geom_jitter(height=0.1, width=0.25) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial")) +
+  facet_wrap(~populism)
 ```
