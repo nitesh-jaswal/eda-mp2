@@ -41,9 +41,10 @@ ggplot(WTHH.long, aes(x=response)) + stat_count(aes(fill=grp, weight=weight_DFP)
   facet_wrap(~issue) + scale_fill_manual(values=cb_palette)
 ```
 
-## Swing voters behave similar to Loyal Democrats on issues such as GREENJOB, GUNS, M4A, WEALTH, MARLEG
-## Swing voters behave similar to Loyal Republicans on issues such as ICE
+With the exception of immigration issue (ICE), **Swing voters** tend to share *similar* opinions with **Loyal Democrats** across the remaining five issues. Interestingly, both these cohorts voted in favor of all five issues with a majority of voters choosing the *Strongly support* option. Having said this, an equivalent number of **Swing voters** chose *Strongly support* and *Strongly oppose* on the Medicare for all (M4A) issue, thereby showcasing a slightly different opinion than the **Loyal Democrats**.
+As for the immigration issue, while **Loyal Democrats** do not seem to have any coherent opinion, both the **Loyal Democrats** and **Swing voters** cohorts voted against the defunding of ICE with a majority of them choosing the **Strongly oppose** option.
 
+# Solution 3:
 ```{r}
 
 ```
