@@ -2,7 +2,10 @@
 title: "Mini-project 2"
 author: "Ankit Mathur"
 date: "3/17/2019"
-output: html_document
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -42,9 +45,10 @@ WTHH.long <- WTHH.long[!is.na(WTHH.long$response) & !is.na(WTHH.long$grp),]
 ```{r}
 ggplot(WTHH.long, aes(x=response)) + stat_count(aes(fill=grp, weight=weight_DFP)) +
   facet_wrap(~issue) + scale_fill_manual(values=cb_palette) +
-  labs(fill="Voter group", caption="1:Strongly support 2:Somewhat support 3:Neutral 4:Somewhat oppose 5:Strongly oppose 6:Not sure") +
-  ggtitle("Distribution of voter groups by issue") +
-  xlab("Response") + ylab("Number of voters")
+  labs(fill="Voter group", caption="1:Strongly support 2:Somewhat support 3:Neutral 4:Somewhat oppose \n5:Strongly oppose 6:Not sure") +
+  ggtitle("Distribution of Voter groups by Issue") +
+  xlab("Response") + ylab("Number of voters") +
+  theme_bw()
 ```
 
 
@@ -68,41 +72,33 @@ WTHH.issue.long = gather(WTHH.issue, key="issue", value="response",
 ggplot(WTHH.issue.long, aes(x=response, y=swing_voter)) + geom_point(alpha=0.4) +
   geom_jitter(height=0.1, width=0.25) +
   geom_smooth(method = "glm", method.args = list(family = "binomial")) +
-  facet_wrap(~issue)
+  facet_wrap(~issue) +
+  labs(caption="1:Strongly support 2:Somewhat support 3:Neutral 4:Somewhat oppose 5:Strongly oppose") +
+  ggtitle("Logistic regression fits for odds of Swing Voters by Issue") +
+  xlab("Response") + ylab("Probability of Swing voter") +
+  theme_bw()
 ```
+The plots above showcase how the predicted probability of a registered voter being a swing voter varies with the responses to each of the six issues. With the exception of GREENJOB and MARLEG, all the other fitted lines are fairly flat suggesting that we include just these two issues in our final model. However, just to be sure, let us do a logistic regression fit including all six issue variables (without interaction) and look at the coefficients for each of these issues:
 
 
 ```{r}
-WTHH.issue.logit1 <- glm(swing_voter ~ WEALTH, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
+WTHH.issue.logit1 <- glm(swing_voter ~ GREENJOB + GUNS + ICE + M4A + MARLEG + WEALTH, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
 display(WTHH.issue.logit1)
+```
+As expected, the coefficients for all issues, except GREENJOB and MARLEG, are close to zero. Hence, in our final model, we will focus only on these two issues. Furthermore, for the sake of simplicity more than anything else, we will avoid including any interactions between our predictors.
+
+```{r}
+WTHH.issue.logit <- glm(swing_voter ~ GREENJOB + MARLEG, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
+display(WTHH.issue.logit)
 ```
 
 With just the GREENJOB issue as the predictor, we observe that:
 $$
-\textrm{logit[P(Swing voter)]} = -2.04 + 0.17 \times \textrm{GREENJOB}
+\textrm{logit[P(Swing voter)]} = 0.25 \times \textrm{GREENJOB} - 0.19 \times \textrm{MARLEG} - 1.75
 $$
-Using the "divide by 4" rule, we can say that moving one level closer to opposing the GREENJOB issue increases the model probability of being **Swing voter** by 4.25%
-
-```{r}
-WTHH.issue.logit2 <- glm(swing_voter ~ GREENJOB + GUNS, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
-display(WTHH.issue.logit2)
-```
-
-With GREENJOB and GUNS issues as the predictors, we observe that:
-$$
-\textrm{logit[P(Swing voter)]} = -2.06 + 0.16 \times \textrm{GREENJOB} + 0.01 \times \textrm{GUNS}
-$$
-Using the "divide by 4" rule, we can say that moving one level closer to opposing the GREENJOB issue increases the model probability of being **Swing voter** by 4.25%
-
-```{r}
-WTHH.issue.logit <- glm(swing_voter ~ GREENJOB + GUNS + ICE + M4A + MARLEG + WEALTH, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
-display(WTHH.issue.logit)
-```
-
-```{r}
-# WTHH.issue.logit <- glm(swing_voter ~ GREENJOB * GUNS * ICE * M4A * MARLEG * WEALTH, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
-# display(WTHH.issue.logit)
-```
+Using the "divide by 4" rule, we can say that:  
+• As per our model, keeping the opinion on MARLEG constant and moving one level closer to opposing the GREENJOB issue increases the probability of being **Swing voter** by 6.25%  
+• Keeping the opinion on GREENJOB constant and moving one level closer to opposing the MARLEG issue decreases the model probabilty by 4.75%
 
 ```{r}
 WTHH.pop = WTHH[c("POP_1", "POP_2", "POP_3", "weight_DFP", "swing_voter")]
@@ -113,6 +109,13 @@ WTHH.pop <- WTHH.pop[rowSums(WTHH.pop[,c(1,2,3)] == 6) == 0,]
 WTHH.pop <- WTHH.pop[complete.cases(WTHH.pop),]
 ```
 
+# Appendix
+
+```{r}
+WTHH.issue.logit3 <- glm(swing_voter ~ GREENJOB * GUNS * ICE * M4A * MARLEG * WEALTH, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
+display(WTHH.issue.logit3)
+```
+
 ```{r}
 WTHH.pop.long = gather(WTHH.pop, key="populism", value="response",
                    c("POP_1", "POP_2", "POP_3"))
@@ -121,3 +124,4 @@ ggplot(WTHH.pop.long, aes(x=response, y=swing_voter)) + geom_point(alpha=0.4) +
   geom_smooth(method = "glm", method.args = list(family = "binomial")) +
   facet_wrap(~populism)
 ```
+
