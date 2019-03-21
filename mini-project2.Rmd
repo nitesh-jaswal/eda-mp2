@@ -21,7 +21,7 @@ library(GGally)
 # Load Data
 dfp_WTHH = read.csv("DFP_WTHH_release.csv")
 names(dfp_WTHH)[1] <- "rowid"
-dfp = dfp_WTHH %>% select(rowid, house3, presvote16post, weight_DFP, M4A, GREENJOB, WEALTH, MARLEG, ICE, GUNS, POP_1, POP_2, POP_3, gender)
+dfp = dplyr::select(dfp_WTHH, rowid, house3, presvote16post, weight_DFP, M4A, GREENJOB, WEALTH, MARLEG, ICE, GUNS, POP_1, POP_2, POP_3, gender)
 # Removing NAs or 7 (Did not vote) for presvote16post
 dfp =  dfp[!(is.na(dfp$presvote16post) | dfp$presvote16post == 7),]
 # summary(dfp)
@@ -72,3 +72,134 @@ ggplot(dfp.q1, aes(x = RESPONSE, color = is_swing, fill = is_swing)) + stat_coun
 * The Switch to R and Switch to D voters differ strongly on issue variable M4A. The Switch to R voters show a peak on the response value 5(Strongly oppose) whereas the Switch to D voters peak on response value 1 (Strongly support).
 * The Switch to R and Switch to D voters behave rather similarly on the issue of Marijuana Legalization (MARLEG) with both of their histograms peaking on response value 1 (Strongly support) and then decreasing from there on.
 * It is interesting to note that the Switch to D voters show a much more homogenous response on many of the issue variables compared to Switch to R voters who demonstrate a more divided opinion. 
+
+
+```{r}
+cb_palette = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+```
+
+```{r}
+WTHH_full = read_csv("DFP_WTHH_release.csv")
+WTHH = WTHH_full[c("presvote16post", "house3", "weight_DFP", "M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS", "POP_1", "POP_2", "POP_3")]
+```
+
+```{r}
+WTHH$grp <- ifelse(WTHH$presvote16post==1 & WTHH$house3==1, "Loyal Democrats", ifelse(WTHH$presvote16post==2 & WTHH$house3==2, "Loyal Republicans", ifelse(!(WTHH$presvote16post %in% c(7,NA)), "Swing voters", NA)))
+WTHH$swing_bhv <- ifelse(WTHH$grp=="Swing voters", ifelse(WTHH$house3==1, "Switch to D", ifelse(WTHH$house3==2, "Switch to R", "Others")), NA)
+
+# cols <- c("presvote16post", "house3", "M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS", "POP_1", "POP_2", "POP_3", "grp", "swing_bhv")
+# WTHH[cols] <- lapply(WTHH[cols], factor)
+```
+
+# Solution 2:
+```{r}
+WTHH.long = gather(WTHH, key="issue", value="response",
+                   c("M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS"))
+cols <- c("issue", "response")
+WTHH.long[cols] <- lapply(WTHH.long[cols], factor)
+WTHH.long <- WTHH.long[c("issue", "response", "grp", "weight_DFP")]
+WTHH.long <- WTHH.long[!is.na(WTHH.long$response) & !is.na(WTHH.long$grp),]
+```
+
+```{r}
+ggplot(WTHH.long, aes(x=response)) + stat_count(aes(fill=grp, weight=weight_DFP)) +
+  facet_wrap(~issue) + scale_fill_manual(values=cb_palette) +
+  labs(fill="Voter group", caption="1:Strongly support 2:Somewhat support 3:Neutral 4:Somewhat oppose \n5:Strongly oppose 6:Not sure") +
+  ggtitle("Distribution of Voter groups by Issue") +
+  xlab("Response") + ylab("Number of voters") +
+  theme_bw()
+```
+
+
+With the exception of immigration issue (ICE), **Swing voters** tend to share *similar* opinions with **Loyal Democrats** across the remaining five issues. Interestingly, both these cohorts voted in favor of all five issues with a majority of voters choosing the *Strongly support* option. Having said this, an equivalent number of **Swing voters** chose *Strongly support* and *Strongly oppose* on the Medicare for all (M4A) issue, thereby showcasing a slightly different opinion than the **Loyal Democrats**.
+As for the immigration issue, while **Loyal Democrats** do not seem to have any coherent opinion, both the **Loyal Democrats** and **Swing voters** cohorts voted against the defunding of ICE with a majority of them choosing the **Strongly oppose** option.
+
+# Solution 3:
+```{r}
+WTHH$swing_voter = ifelse(WTHH$grp=="Swing voters", 1, ifelse(is.na(WTHH$grp), NA, 0))
+WTHH.issue = WTHH[c("GREENJOB", "GUNS", "ICE", "M4A", "MARLEG", "WEALTH", "weight_DFP", "swing_voter")]
+```
+
+```{r}
+WTHH.issue <- WTHH.issue[rowSums(WTHH.issue[,c(1,2,3,4,5,6)] == 6) == 0,]
+WTHH.issue <- WTHH.issue[complete.cases(WTHH.issue),]
+```
+
+```{r}
+WTHH.issue.long = gather(WTHH.issue, key="issue", value="response",
+                   c("M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS"))
+ggplot(WTHH.issue.long, aes(x=response, y=swing_voter)) + geom_point(alpha=0.4) +
+  geom_jitter(height=0.1, width=0.25) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial")) +
+  facet_wrap(~issue) +
+  labs(caption="1:Strongly support 2:Somewhat support 3:Neutral 4:Somewhat oppose 5:Strongly oppose") +
+  ggtitle("Logistic regression fits for odds of Swing Voters by Issue") +
+  xlab("Response") + ylab("Probability of Swing voter") +
+  theme_bw()
+```
+The plots above showcase how the predicted probability of a registered voter being a swing voter varies with the responses to each of the six issues. With the exception of GREENJOB and MARLEG, all the other fitted lines are fairly flat suggesting that we include just these two issues in our final model. However, just to be sure, let us do a logistic regression fit including all six issue variables (without interaction) and look at the coefficients for each of these issues:
+
+
+```{r}
+WTHH.issue.logit1 <- glm(swing_voter ~ GREENJOB + GUNS + ICE + M4A + MARLEG + WEALTH, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
+display(WTHH.issue.logit1)
+```
+As expected, the coefficients for all issues, except GREENJOB and MARLEG, are close to zero. Hence, in our final model, we will focus only on these two issues. Furthermore, for the sake of simplicity more than anything else, we will avoid including any interactions between our predictors.
+
+```{r}
+WTHH.issue.logit <- glm(swing_voter ~ GREENJOB + MARLEG, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
+display(WTHH.issue.logit)
+```
+
+With just the GREENJOB issue as the predictor, we observe that:
+$$
+\textrm{logit[P(Swing voter)]} = 0.25 \times \textrm{GREENJOB} - 0.19 \times \textrm{MARLEG} - 1.75
+$$
+Using the "divide by 4" rule, we can say that:  
+• As per our model, keeping the opinion on MARLEG constant and moving one level closer to opposing the GREENJOB issue increases the probability of being **Swing voter** by 6.25%  
+• Keeping the opinion on GREENJOB constant and moving one level closer to opposing the MARLEG issue decreases the model probabilty by 4.75%
+
+```{r}
+WTHH.pop = WTHH[c("POP_1", "POP_2", "POP_3", "weight_DFP", "swing_voter")]
+```
+
+```{r}
+WTHH.pop <- WTHH.pop[rowSums(WTHH.pop[,c(1,2,3)] == 6) == 0,]
+WTHH.pop <- WTHH.pop[complete.cases(WTHH.pop),]
+```
+
+```{r}
+issue.predict.grid = expand.grid(MARLEG = seq(1, 5, 1), GREENJOB = seq(1, 5, 1))
+issue.pred = predict(WTHH.issue.logit, type = "response", newdata = issue.predict.grid)
+issue.pred.df = data.frame(issue.predict.grid, swing.prob = as.vector(issue.pred))
+ggplot(issue.pred.df, aes(x = MARLEG, y = swing.prob, group = factor(GREENJOB), color = factor(GREENJOB))) + geom_line(size=1) + xlab("MARLEG Response") + ylab("Probability of Swing voter") + labs(color = "GREENJOB \n Response") + theme_bw() + scale_color_manual(values = cb_palette)
+```
+
+```{r}
+issue.predict.grid = expand.grid(MARLEG = seq(1, 5, 1), GREENJOB = seq(1, 5, 1))
+issue.pred = predict(WTHH.issue.logit, type = "response", newdata = issue.predict.grid)
+issue.pred.df = data.frame(issue.predict.grid, swing.prob = as.vector(issue.pred)
+ggplot(issue.pred.df, aes(x = MARLEG, y = swing.prob, group = GREENJOB, color = GREENJOB)) + geom_line() + xlab("MARLEG Response") + ylab("Probability of Swing voter") + labs(color = "GREENJOB \n Response") + theme_bw() + scale_color_continuous(low = "#E69F00", high = "#CC79A7")
+```
+
+```{r}
+# Contouring 
+ggplot(issue.pred.df, aes(x = MARLEG, y = GREENJOB, z = swing.pred))
+```
+
+# Appendix
+
+```{r}
+WTHH.issue.logit3 <- glm(swing_voter ~ GREENJOB * GUNS * ICE * M4A * MARLEG * WEALTH, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
+display(WTHH.issue.logit3)
+```
+
+```{r}
+WTHH.pop.long = gather(WTHH.pop, key="populism", value="response",
+                   c("POP_1", "POP_2", "POP_3"))
+ggplot(WTHH.pop.long, aes(x=response, y=swing_voter)) + geom_point(alpha=0.4) +
+  geom_jitter(height=0.1, width=0.25) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial")) +
+  facet_wrap(~populism)
+```
+
