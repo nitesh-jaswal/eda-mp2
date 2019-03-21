@@ -109,6 +109,20 @@ WTHH.pop <- WTHH.pop[rowSums(WTHH.pop[,c(1,2,3)] == 6) == 0,]
 WTHH.pop <- WTHH.pop[complete.cases(WTHH.pop),]
 ```
 
+```{r}
+issue.predict.grid = expand.grid(MARLEG = seq(1, 5, 1), GREENJOB = seq(1, 5, 1))
+issue.pred = predict(WTHH.issue.logit, type = "response", newdata = issue.predict.grid)
+issue.pred.df = data.frame(issue.predict.grid, swing.prob = as.vector(issue.pred))
+ggplot(issue.pred.df, aes(x = MARLEG, y = swing.prob, group = factor(GREENJOB), color = factor(GREENJOB))) + geom_line(size=1) + xlab("MARLEG Response") + ylab("Probability of Swing voter") + labs(color = "GREENJOB \n Response") + theme_bw() + scale_color_manual(values = cb_palette)
+```
+
+```{r}
+issue.predict.grid = expand.grid(MARLEG = seq(1, 5, 1), GREENJOB = seq(1, 5, 1))
+issue.pred = predict(WTHH.issue.logit, type = "response", newdata = issue.predict.grid)
+issue.pred.df = data.frame(issue.predict.grid, swing.prob = as.vector(issue.pred/max(issue.pred)))
+ggplot(issue.pred.df, aes(x = MARLEG, y = swing.prob, group = GREENJOB, color = GREENJOB)) + geom_line() + xlab("MARLEG Response") + ylab("Probability of Swing voter") + labs(color = "GREENJOB \n Response") + theme_bw() + scale_color_continuous(low = "#E69F00", high = "#CC79A7")
+```
+
 # Appendix
 
 ```{r}
