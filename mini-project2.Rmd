@@ -184,7 +184,7 @@ ggplot(issue.pred.df, aes(x = MARLEG, y = swing.prob, group = GREENJOB, color = 
 
 ```{r}
 # Contouring 
-ggplot(issue.pred.df, aes(x = MARLEG, y = GREENJOB, z = swing.pred))
+ggplot(issue.pred.df, aes(x = MARLEG, y = GREENJOB, z = swing.prob)) + geom_raster(aes(fill = swing.prob)) + geom_contour(size = 1) + coord_fixed() + scale_fill_distiller(palette = "RdYlBu")
 ```
 
 # Appendix
