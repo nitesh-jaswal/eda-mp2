@@ -16,8 +16,60 @@ knitr::opts_chunk$set(echo = FALSE, tidy = TRUE, warning = FALSE, message = FALS
 library(tidyverse)
 library(broom)
 library(arm)
+library(GGally)
 cb_palette = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 ```
+
+
+```{r}
+# Load Data
+dfp_WTHH = read.csv("DFP_WTHH_release.csv")
+names(dfp_WTHH)[1] <- "rowid"
+dfp = dplyr::select(dfp_WTHH, rowid, house3, presvote16post, weight_DFP, M4A, GREENJOB, WEALTH, MARLEG, ICE, GUNS, POP_1, POP_2, POP_3, gender)
+# Removing NAs or 7 (Did not vote) for presvote16post
+dfp =  dfp[!(is.na(dfp$presvote16post) | dfp$presvote16post == 7),]
+# summary(dfp)
+n_row = nrow(dfp)
+```
+
+# Solution 1:
+
+```{r}
+is_swing_voter <- function() {
+  vect = as.numeric(rep.int(1, times = n_row))
+  for(i in 1:n_row) {
+    if(dfp$presvote16post[i] == 1 && dfp$house3[i] == 1)
+      vect[i] = 2
+    else if(dfp$presvote16post[i] == 2 && dfp$house3[i] == 2)
+      vect[i] = 3
+    else if(dfp$presvote16post[i] != 2 && dfp$house3[i] == 2)
+      vect[i] = 4
+    else if(dfp$presvote16post[i] != 1 && dfp$house3[i] == 1)
+      vect[i] = 5
+  }
+  return(vect)
+}
+# 1 = Swing, 2 = Loyal Demo, 3 = Loyal Rep, 4 = Switch to R, 5 = Switch to D
+dfp$is_swing = is_swing_voter()
+dfp$is_swing = factor(dfp$is_swing, labels = c("Swing", "Loyal Democrat", "Loyal Republican", "Switch to R", "Switch to D"))
+
+```
+
+```{r message = FALSE, warning = FALSE}
+dfp.q1 = dfp %>% subset(., subset = (.$is_swing == "Switch to R" | (.$is_swing == "Switch to D")), select = c("is_swing", "M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS", "weight_DFP"))
+
+cb_palette2 = c("#E69F00", "#56B4E9")
+
+dfp.q1 = gather(dfp.q1, key = "ISSUE", value = "RESPONSE", c("M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS"))
+dfp.q1$RESPONSE = factor(dfp.q1$RESPONSE)
+dfp.q1 = na.omit(dfp.q1)
+ggplot(dfp.q1, aes(x = RESPONSE, color = is_swing, fill = is_swing)) + stat_count((aes(weight = weight_DFP))) + facet_wrap(~ISSUE) + theme_bw() + guides(fill = guide_legend(title="Swing Voters"), color = FALSE) + scale_fill_manual(values = cb_palette2) + labs(title="Distribution of response on Issue Variables for Switch to D/R voters", caption = "Response Values: 1. Strongly support  2. Somewhat support  3. Neither support nor oppose \n  4. Somewhat oppose  5. Strongly oppose  6. Not sure") + ylab("Count") + xlab("Response")
+```
+
+* From the plot above, it can be observed that the **Switch to D** voters have a strong opinion on all issues except the immigration issue (ICE). On the other hand, the **Switch to R** voters have a strong opinion on issues such as ICE, MARLEG and M4A.
+* The **Switch to R** and **Switch to D** voters differ strongly on the Medicare for all (M4A) issue. While a majority of **Switch to R** voters seem to strongly oppose this issue, the **Switch to D** voters tend to support it.
+* The **Switch to R** and **Switch to D** voters behave rather similarly on the issue of marijuana legalization (MARLEG) with both the cohorts showing support towards the legalization.
+* It is interesting to note that while the **Switch to R** voter group does not seem to have a strong opinion on multiple issues (GREENJOB, GUNS, and WEALTH), the **Switch to D** cohort does demonstrate a strong opinion on all issues except immigration (ICE).
 
 ```{r}
 WTHH_full = read_csv("DFP_WTHH_release.csv")
