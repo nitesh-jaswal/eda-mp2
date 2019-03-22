@@ -99,7 +99,7 @@ WTHH.long <- WTHH.long[!is.na(WTHH.long$response) & !is.na(WTHH.long$grp),]
 ```{r}
 ggplot(WTHH.long, aes(x=response)) + stat_count(aes(fill=grp, weight=weight_DFP)) +
   facet_wrap(~issue) + scale_fill_manual(values=cb_palette) +
-  labs(fill="Voter group", caption="1:Strongly support 2:Somewhat support 3:Neutral 4:Somewhat oppose \n5:Strongly oppose 6:Not sure") +
+  labs(fill="Voter group", caption="Response Values: 1. Strongly support  2. Somewhat support  3. Neither support nor oppose \n  4. Somewhat oppose  5. Strongly oppose  6. Not sure") +
   ggtitle("Distribution of Voter groups by Issue") +
   xlab("Response") + ylab("Number of voters") +
   theme_bw()
@@ -127,7 +127,7 @@ ggplot(WTHH.issue.long, aes(x=response, y=swing_voter)) + geom_point(alpha=0.4) 
   geom_jitter(height=0.1, width=0.25) +
   geom_smooth(method = "glm", method.args = list(family = "binomial")) +
   facet_wrap(~issue) +
-  labs(caption="1:Strongly support 2:Somewhat support 3:Neutral 4:Somewhat oppose 5:Strongly oppose") +
+  labs(caption="Response Values: 1. Strongly support  2. Somewhat support  3. Neither support nor oppose \n  4. Somewhat oppose  5. Strongly oppose") +
   ggtitle("Logistic regression fits for odds of Swing Voter by Issue") +
   xlab("Response") + ylab("Probability of Swing voter") +
   theme_bw()
@@ -135,7 +135,7 @@ ggplot(WTHH.issue.long, aes(x=response, y=swing_voter)) + geom_point(alpha=0.4) 
 The plots above showcase how the predicted probability of a registered voter being a swing voter varies with responses to each of the six issues. With the exception of GREENJOB and MARLEG, all the other fitted lines are fairly flat suggesting that we include just these two issues in our final model.  
 However, just to be sure, we did explicitly fit a logistic regression model including all six issue variables without interaction and looked at the coefficients for each of these issues (see appendix). As expected, the coefficients for all issues, except GREENJOB and MARLEG, turned out to be close to zero.  
 Hence, in our final model, we will focus only on these two issues. Furthermore, for the sake of simplicity more than anything else, we will avoid including any interactions between our predictors.  
-Finally, let us fit a model to predict swing voters using GREENJOB and MARLEG issues:
+Finally, let us fit a logistic regression model to predict swing voters using GREENJOB and MARLEG issues:
 ```{r}
 WTHH.issue.logit <- glm(swing_voter ~ GREENJOB + MARLEG, weights=weight_DFP, family="quasibinomial", data=WTHH.issue)
 display(WTHH.issue.logit)
@@ -148,7 +148,8 @@ Using the "divide by 4" rule, we can say that:
 • As per our model, keeping the opinion on MARLEG constant and moving one level closer to opposing the GREENJOB issue *increases* the probability of swing voter by 6.25%  
 • Similarly, keeping the opinion on GREENJOB constant and moving one level closer to opposing the MARLEG issue *decreases* the model probabilty by 4.75%  
 
-Now, let's visualize this model.
+Now, let's visualize this model:  
+
 ```{r}
 issue.predict.grid = expand.grid(MARLEG = seq(1, 5, 1), GREENJOB = seq(1, 5, 1))
 issue.pred = predict(WTHH.issue.logit, type = "response", newdata = issue.predict.grid)
@@ -156,15 +157,16 @@ issue.pred.df = data.frame(issue.predict.grid, swing.prob = as.vector(issue.pred
 
 ggplot(issue.pred.df, aes(x = MARLEG, y = swing.prob, group = factor(GREENJOB), color = factor(GREENJOB))) +
   geom_line(size=1) + xlab("MARLEG Response") + ylab("Probability of Swing voter") +
-  labs(color = "GREENJOB \n Response", caption="1:Strongly support 2:Somewhat support 3:Neutral 4:Somewhat oppose 5:Strongly oppose") +
+  labs(color = "GREENJOB \n Response", caption="Response Values: 1. Strongly support  2. Somewhat support  3. Neither support nor oppose \n  4. Somewhat oppose  5. Strongly oppose") +
   theme_bw() + scale_color_manual(values = cb_palette)
 ```
 
 
 ```{r}
 # Raster 
-ggplot(issue.pred.df, aes(x = MARLEG, y = GREENJOB, z = swing.prob)) + geom_raster(aes(fill = swing.prob))  + coord_fixed() + scale_fill_distiller(palette = "RdYlBu") + theme_bw() + labs(title="Predicted probability plot for a given response \non issue variables", fill = "Predicted \nProbability", caption="1:Strongly support 2:Somewhat support 3:Neutral 4:Somewhat oppose \n5:Strongly oppose 6:Not sure" )
+ggplot(issue.pred.df, aes(x = MARLEG, y = GREENJOB, z = swing.prob)) + geom_raster(aes(fill = swing.prob))  + coord_fixed() + scale_fill_distiller(palette = "RdYlBu") + theme_bw() + labs(title="Predicted probability plot for a given response \non issue variables", fill = "Predicted \nProbability", caption="Response Values: 1. Strongly support  2. Somewhat support  \n3. Neither support nor oppose  4. Somewhat oppose  5. Strongly oppose" )
 ```
+
 In the above plots, it can be clearly visualized that keeping the opinion on GREENJOB constant and moving towards opposing the MARLEG issue *decreases* the model probabilty of being a swing voter. Furthermore, for a given opinion on MARLEG, the more a voter opposes GREENJOB, higher are the chances of him/her being a swing voter.  
 
 Moving on to *populism* variables, let's do a faceted plot (as before) to get a feel of how the odds of swing voter vary with each populism variable.
@@ -185,43 +187,39 @@ ggplot(WTHH.pop.long, aes(x=response, y=swing_voter)) + geom_point(alpha=0.4) +
   geom_jitter(height=0.1, width=0.25) +
   geom_smooth(method = "glm", method.args = list(family = "binomial")) +
   facet_wrap(~populism) +
-  labs(caption="1:Strongly support 2:Somewhat support 3:Neutral 4:Somewhat oppose 5:Strongly oppose") +
+  labs(caption="Response Values: 1. Strongly agree  2. Somewhat agree  3. Neither agree nor disagree \n  4. Somewhat disagree  5. Strongly disagree") +
   ggtitle("Logistic regression fits for odds of Swing Voter by Populism") +
   xlab("Response") + ylab("Probability of Swing voter") +
   theme_bw()
 ```
-The slope of the fitted lines decrease as we move from *POP_1* to *POP_2* ultimately flattening out as we reach *POP_3*. As before, just for our satisfaction, we looked at the slopes for each of these populism variables by explicitly fitting a logistic regression model for predicting the swing voters and observed that the coefficients for *POP_2* and *POP_3* variables did not turn out to be significant enough (see appendix).  
+
+The slope of the fitted lines decrease as we move from *POP_1* to *POP_2* ultimately flattening out as we reach *POP_3*. As before, just for our satisfaction, we looked at the slopes for each of these populism variables by explicitly fitting a logistic regression model for predicting the swing voters and observed that the coefficients for *POP_2* and *POP_3* variables turned out to be close to zero (see appendix).  
 Hence, let us fit our second model based on just the *POP_1* populism variable:
 ```{r}
 WTHH.pop.logit <- glm(swing_voter ~ POP_1, weights=weight_DFP, family="quasibinomial", data=WTHH.pop)
 display(WTHH.pop.logit)
 ```
 
-We interpret the coefficients above as representing to odds of a registered voter being a swing voter as below:
+We interpret the coefficients above as representing the odds of a registered voter being a swing voter as below:
 $$
 \textrm{logit[P(Swing voter)]} = - 0.79 - 0.28 \times{POP_1}
 $$
+
 Again, as per the "divide by 4" rule, we can say that an increment of one degree of disagreement with the sentiment shared by *POP_1* variable decreases the probability of swing voter by 7%.  
 
-Visualizing this model we get:
+Visualizing this model we get:  
+
 ```{r}
 pop.predict.grid = expand.grid(POP_1 = seq(1, 5, 1))
 pop.pred = predict(WTHH.pop.logit, type = "response", newdata = pop.predict.grid)
 pop.pred.df = data.frame(pop.predict.grid, swing.prob = as.vector(pop.pred))
 ggplot(pop.pred.df, aes(x = POP_1, y = swing.prob)) +
   geom_line(size=1) + xlab("POP_1 Response") + ylab("Probability of Swing voter") +
-  labs(caption="1:Strongly agree 2:Somewhat agree 3:Neutral 4:Somewhat disagree 5:Strongly disagree", title="Logistic regression fit for odds of swing voter") +
-  theme_bw() + scale_color_manual(values = cb_palette)
+  labs(caption="Response Values: 1. Strongly agree  2. Somewhat agree  3. Neither agree nor disagree \n  4. Somewhat disagree  5. Strongly disagree", title="Logistic regression fit for odds of swing voter") +
+  theme_bw()
 ```
 
-While the training set classification error for the **issue** model is 13.8%, for the **populism** model it is XXX suggesting that **populism** variables are much better at predicting the odds of swing voters.
-
-```{r}
-issue.predict.grid = expand.grid(MARLEG = seq(1, 5, 1), GREENJOB = seq(1, 5, 1))
-issue.pred = predict(WTHH.issue.logit, type = "response", newdata = issue.predict.grid)
-issue.pred.df = data.frame(issue.predict.grid, swing.prob = as.vector(issue.pred/max(issue.pred)))
-ggplot(issue.pred.df, aes(x = MARLEG, y = swing.prob, group = GREENJOB, color = GREENJOB)) + geom_line() + xlab("MARLEG Response") + ylab("Probability of Swing voter") + labs(color = "GREENJOB \n Response") + theme_bw() + scale_color_continuous(low = "#E69F00", high = "#CC79A7")
-```
+In order to better understand how these models perform, we have included the residual plots in the appendix.
 
 # Appendix
 
@@ -259,6 +257,18 @@ WTHH.pop.logit1 <- glm(swing_voter ~ POP_1 * POP_2 * POP_3, weights=weight_DFP, 
 display(WTHH.pop.logit1)
 ```
 
-# Conclusion
+```{r}
+WTHH.pop.logit.df <- WTHH.pop
+WTHH.pop.logit.df$.fitted <- fitted.values(WTHH.pop.logit)
+WTHH.pop.logit.df$.resid <- residuals(WTHH.pop.logit, type="response")
+WTHH.pop.logit.df$.pred <- 1 * (WTHH.pop.logit.df$.fitted > max(WTHH.pop.logit.df$.fitted)/1)
+Correct <- (WTHH.pop.logit.df$swing_voter == WTHH.pop.logit.df$.pred)
+1 - (sum(Correct) / nrow(WTHH.pop.logit.df))
+summary(factor(WTHH.pop.logit.df$swing_voter))
+```
 
-Retrospectively, it is quite 
+```{r residuals for populism}
+ggplot(WTHH.pop.logit.df, aes(x=POP_1, y=.resid)) + geom_point(alpha=0.4) +
+  geom_jitter(height=0.1, width=0.25) + geom_smooth(method = "loess", method.args = list(degree = 1)) +
+  xlab("Response") + ylab("Residuals") + ggtitle("Residual plot for POP_1")
+```
