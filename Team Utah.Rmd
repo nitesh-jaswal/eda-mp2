@@ -63,12 +63,19 @@ cb_palette2 = c("#E69F00", "#56B4E9")
 dfp.q1 = gather(dfp.q1, key = "ISSUE", value = "RESPONSE", c("M4A", "GREENJOB", "WEALTH", "MARLEG", "ICE", "GUNS"))
 dfp.q1$RESPONSE = factor(dfp.q1$RESPONSE)
 dfp.q1 = na.omit(dfp.q1)
+```
+
+```{r}
 # ggplot(dfp.q1[dfp.q1$RESPONSE != 6,], aes(x = RESPONSE, color = is_swing, fill = is_swing)) + stat_count((aes(weight = weight_DFP))) + facet_wrap(~ISSUE) + theme_bw() + guides(fill = guide_legend(title="Swing Voters"), color = FALSE) + scale_fill_manual(values = cb_palette2) + labs(title="Distribution of response on Issue Variables for Switch to D/R voters", caption = "Response Values: 1. Strongly support  2. Somewhat support  3. Neither support nor oppose \n  4. Somewhat oppose  5. Strongly oppose") + ylab("Count") + xlab("Response")
 
 ggplot(dfp.q1[dfp.q1$RESPONSE != 6,], aes(x = RESPONSE, color = is_swing, fill = is_swing)) +
-  geom_bar(mapping = aes(x = RESPONSE, y = ..prop.., group = 1), stat = "count") +
+  geom_bar(mapping = aes(x = RESPONSE, y = ..prop.., group = 1, weight=weight_DFP), stat = "count") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  facet_wrap(~ISSUE + is_swing) + theme_bw() + guides(fill = guide_legend(title="Swing Voters"), color = FALSE) + scale_fill_manual(values = cb_palette2) + labs(title="Distribution of response on Issue Variables for Switch to D/R voters", caption = "Response Values: 1. Strongly support  2. Somewhat support  3. Neither support nor oppose \n  4. Somewhat oppose  5. Strongly oppose") + ylab("Proportion of voters (%)") + xlab("Response")
+  facet_wrap(~ISSUE + is_swing) + theme_bw() + 
+  guides(fill = guide_legend(title="Swing Voters"), color = FALSE) +
+  scale_fill_manual(values = cb_palette2) +
+  labs(title="Distribution of response on Issue Variables for Switch to D/R voters", caption = "Response Values: 1. Strongly support  2. Somewhat support  3. Neither support nor oppose \n  4. Somewhat oppose  5. Strongly oppose") +
+  ylab("Proportion of voters (%)") + xlab("Response")
 ```
 
 * From the plot above, it can be observed that the **Switch to D** voters have a strong opinion on all issues except the immigration issue (ICE). On the other hand, the **Switch to R** voters have a strong opinion on issues such as ICE, MARLEG and M4A.
@@ -102,16 +109,29 @@ WTHH.long <- WTHH.long[!is.na(WTHH.long$response) & !is.na(WTHH.long$grp),]
 ```
 
 ```{r}
-ggplot(WTHH.long, aes(x=response)) + stat_count(aes(fill=grp, weight=weight_DFP)) +
-  facet_wrap(~issue) + scale_fill_manual(values=cb_palette) +
-  labs(fill="Voter group", caption="Values: 1. Strongly support  2. Somewhat support  3. Neither support nor oppose \n  4. Somewhat oppose  5. Strongly oppose  6. Not sure") +
+ggplot(WTHH.long[WTHH.long$response != 6 & (WTHH.long$grp=="Loyal Democrats" | WTHH.long$grp=="Swing voters"),], aes(x=response, color = grp, fill = grp)) +
+  geom_bar(mapping = aes(x = response, y = ..prop.., group = 1, weight=weight_DFP), stat = "count") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  facet_wrap(~issue + grp) + scale_fill_manual(values=cb_palette2) +
+  guides(fill = guide_legend(title="Swing Voters"), color = FALSE) +
+  labs(fill="Voter group", caption="Values: 1. Strongly support  2. Somewhat support  3. Neither support nor oppose \n  4. Somewhat oppose  5. Strongly oppose") +
+  ggtitle("Distribution of Voter groups by Issue") +
+  xlab("Response") + ylab("Number of voters") +
+  theme_bw()
+
+ggplot(WTHH.long[WTHH.long$response != 6 & (WTHH.long$grp=="Loyal Republicans" | WTHH.long$grp=="Swing voters"),], aes(x=response, color = grp, fill = grp)) +
+  geom_bar(mapping = aes(x = response, y = ..prop.., group = 1, weight=weight_DFP), stat = "count") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  facet_wrap(~issue + grp) + scale_fill_manual(values=cb_palette2) +
+  guides(fill = guide_legend(title="Swing Voters"), color = FALSE) +
+  labs(fill="Voter group", caption="Values: 1. Strongly support  2. Somewhat support  3. Neither support nor oppose \n  4. Somewhat oppose  5. Strongly oppose") +
   ggtitle("Distribution of Voter groups by Issue") +
   xlab("Response") + ylab("Number of voters") +
   theme_bw()
 ```
 With the exception of immigration issue (ICE), **Swing voters** tend to share *similar* opinions with **Loyal Democrats** across all of the remaining five issues. Interestingly, both these cohorts voted in favor of all five issues with a majority of voters choosing the *Strongly support* option.  
 Having said this, an equivalent number of **Swing voters** chose *Strongly support* and *Strongly oppose* on the Medicare for all (M4A) issue, thereby showcasing a slightly different opinion than the **Loyal Democrats**.  
-As for the immigration issue, while **Loyal Democrats** do not seem to have any coherent opinion, both **Loyal Democrats** and **Swing voters** cohorts voted against the defunding of ICE with a majority of them choosing the *Strongly oppose* option.
+As for the immigration issue, while **Loyal Democrats** do not seem to have any coherent opinion, both **Loyal Republicans** and **Swing voters** cohorts voted against the defunding of ICE with a majority of them choosing the *Strongly oppose* option.
 
 
 # Solution 3:
