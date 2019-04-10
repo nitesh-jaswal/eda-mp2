@@ -96,8 +96,10 @@ ggplot(dfp.q1[dfp.q1$RESPONSE != 6,], aes(x = RESPONSE, color = is_swing, fill =
   ylab("Proportion of voters (%)") + xlab("Response")
 ```
 
-* From the plot above, it can be observed that the **Switch to D** voters have a strong opinion on all issues except the immigration issue (ICE). On the other hand, the **Switch to R** voters have a strong opinion on issues such as ICE, MARLEG and M4A.
-* The **Switch to R** and **Switch to D** voters differ strongly on the Medicare for all (M4A) issue. While a majority of **Switch to R** voters seem to strongly oppose this issue, the **Switch to D** voters tend to support it.
+From the plot above, it can be observed that the **Switch to R** and **Switch to D** voters differ strongly on the Medicare for all (M4A) issue. While a majority of **Switch to R** voters seem to strongly oppose this issue, the **Switch to D** voters tend to support it.
+
+## Additional insights:
+* The **Switch to D** voters have a strong opinion on all issues except the immigration issue (ICE). On the other hand, the **Switch to R** voters have a strong opinion on issues such as ICE, MARLEG and M4A.
 * The **Switch to R** and **Switch to D** voters behave rather similarly on the issue of marijuana legalization (MARLEG) with both the cohorts showing support towards the legalization.
 * It is interesting to note that while the **Switch to R** voter group does not seem to have a strong opinion on multiple issues (GREENJOB, GUNS, and WEALTH), the **Switch to D** cohort does demonstrate a strong opinion on all issues except immigration (ICE).
 
@@ -149,9 +151,12 @@ ggplot(WTHH.long[WTHH.long$response != 6 & (WTHH.long$grp=="Loyal Republicans" |
   xlab("Response") + ylab("Number of voters") +
   theme_bw()
 ```
-With the exception of immigration issue (ICE), **Swing voters** tend to share *similar* opinions with **Loyal Democrats** across all of the remaining five issues. Interestingly, both these cohorts voted in favor of all five issues with a majority of voters choosing the *Strongly support* option.  
-Having said this, an equivalent number of **Swing voters** chose *Strongly support* and *Strongly oppose* on the Medicare for all (M4A) issue, thereby showcasing a slightly different opinion than the **Loyal Democrats**.  
-As for the immigration issue, while **Loyal Democrats** do not seem to have any coherent opinion, both **Loyal Republicans** and **Swing voters** cohorts voted against the defunding of ICE with a majority of them choosing the *Strongly oppose* option.
+
+* With the exception of immigration issue (ICE), **Swing voters** tend to share *similar* opinions with **Loyal Democrats** across all of the remaining five issues. Interestingly, both these cohorts voted in favor of all five issues with a majority of voters choosing the *Strongly support* option.  
+* On the immigration issue, while **Loyal Democrats** do not seem to have any coherent opinion, both **Loyal Republicans** and **Swing voters** cohorts voted against the defunding of ICE with a majority of them choosing the *Strongly oppose* option.  
+
+## Additional insights:  
+* An equivalent number of **Swing voters** chose *Strongly support* and *Strongly oppose* on the Medicare for all (M4A) issue, thereby showcasing a slightly different opinion than the **Loyal Democrats**.  
 
 
 # **Q3: What predicts being a swing voter?**
@@ -192,6 +197,8 @@ $$
 Using the "divide by 4" rule, we can say that:  
 • As per our model, keeping the opinion on MARLEG constant and moving one level closer to opposing the GREENJOB issue *increases* the probability of swing voter by 6.25%  
 • Similarly, keeping the opinion on GREENJOB constant and moving one level closer to opposing the MARLEG issue *decreases* the model probabilty by 4.75%  
+
+Looking at the residual deviance, we can say that this model is not good enough to predict the probability of a voter being a swing voter as it is able to explain only about $\frac{46.5}{2635.7}=1.8$% . However, in our opinion, this is the best we can do if we are to use just the issue variables for prediction because by including any other interactions or other issue variables, we ae just chasing noise rather than actually understanding the true picture here.
 
 Now, let's visualize this model:  
 
@@ -251,6 +258,8 @@ $$
 $$
 
 Again, as per the "divide by 4" rule, we can say that an increment of one degree of disagreement with the sentiment shared by *POP_1* variable decreases the probability of swing voter by 7%.  
+
+Looking at the difference between residual deviance and the null deviance, we see that just $POP_1$ explains $\frac{59.2}{3159.5}=1.9$% variation in our response variable. Furthermore, adding other populism variables (or their interactions) does not help explaining much of the residual deviance here. Hence, we'll go ahead with this model for now.  
 
 Visualizing this model we get:  
 
