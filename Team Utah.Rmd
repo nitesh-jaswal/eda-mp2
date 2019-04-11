@@ -192,11 +192,11 @@ display(WTHH.issue.logit)
 ```
 Interpreting the model above, we get:
 $$
-\textrm{logit[P(Swing voter)]} =  - 1.75 + 0.25 \times \textrm{GREENJOB} - 0.19 \times \textrm{MARLEG}
+\textrm{logit[P(Swing voter)]} =  - 1.34 + 0.21 \times \textrm{GREENJOB} - 0.20 \times \textrm{MARLEG}
 $$
 Using the "divide by 4" rule, we can say that:  
-• As per our model, keeping the opinion on MARLEG constant and moving one level closer to opposing the GREENJOB issue *increases* the probability of swing voter by 6.25%  
-• Similarly, keeping the opinion on GREENJOB constant and moving one level closer to opposing the MARLEG issue *decreases* the model probabilty by 4.75%  
+• As per our model, keeping the opinion on MARLEG constant and moving one level closer to opposing the GREENJOB issue *increases* the probability of swing voter by 5.25%  
+• Similarly, keeping the opinion on GREENJOB constant and moving one level closer to opposing the MARLEG issue *decreases* the model probabilty by 5%  
 
 Looking at the residual deviance, we can say that this model is not good enough to predict the probability of a voter being a swing voter as it is able to explain only about $\frac{46.5}{2635.7}=1.8$% . However, in our opinion, this is the best we can do if we are to use just the issue variables for prediction because by including any other interactions or other issue variables, we ae just chasing noise rather than actually understanding the true picture here.
 
@@ -254,10 +254,10 @@ display(WTHH.pop.logit)
 
 We interpret the coefficients above as representing the odds of a registered voter being a swing voter as below:
 $$
-\textrm{logit[P(Swing voter)]} = - 0.79 - 0.28 \times{POP_1}
+\textrm{logit[P(Swing voter)]} = - 0.54 - 0.25 \times{POP_1}
 $$
 
-Again, as per the "divide by 4" rule, we can say that an increment of one degree of disagreement with the sentiment shared by *POP_1* variable decreases the probability of swing voter by 7%.  
+Again, as per the "divide by 4" rule, we can say that an increment of one degree of disagreement with the sentiment shared by *POP_1* variable decreases the probability of swing voter by 6.25%.  
 
 Looking at the difference between residual deviance and the null deviance, we see that just $POP_1$ explains $\frac{59.2}{3159.5}=1.9$% variation in our response variable. Furthermore, adding other populism variables (or their interactions) does not help explaining much of the residual deviance here. Hence, we'll go ahead with this model for now.  
 
@@ -273,8 +273,18 @@ ggplot(pop.pred.df, aes(x = POP_1, y = swing.prob)) +
   theme_bw()
 ```
 
-In order to better understand how these models perform, we have included the residual plots in the appendix.
+## Training set classification error
 
+```{r}
+pop.predict.grid = dplyr::select(WTHH[!(is.na(WTHH$POP_1) | is.na(WTHH$swing_voter)),], POP_1, swing_voter)
+pop.pred = predict(WTHH.pop.logit, type = "response", newdata = data.frame(POP_1 = pop.predict.grid$POP_1))
+pop.pred.df = data.frame(pop.predict.grid, swing.prob = as.vector(pop.pred), swing.class = as.numeric(as.vector(pop.pred )> 0.13))
+# Calculating error
+class_err = sum(as.numeric(pop.pred.df$swing.class == pop.pred.df$swing_voter))*100/nrow(pop.predict.grid)
+sprintf("Classification Error = %f", class_err)
+```
+We drew the decision boundary at the probability of 0.13 and classified all inputs whose probability was greater than this as swing voters. The classification error for this model turned out to be $20.27578$% which is slightly worse than simply guessing all the voters to not be swing voters.  
+Since the distribution of our data is skewed such that there are very few swing voters in our data, accuracy is not a good metric in this case.
 \pagebreak
 
 # Appendix
