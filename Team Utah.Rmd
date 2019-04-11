@@ -138,7 +138,7 @@ ggplot(WTHH.long[WTHH.long$response != 6 & (WTHH.long$grp=="Loyal Democrats" | W
   guides(fill = guide_legend(title="Swing Voters"), color = FALSE) +
   labs(fill="Voter group", caption="Values: 1. Strongly support  2. Somewhat support  3. Neither support nor oppose \n  4. Somewhat oppose  5. Strongly oppose") +
   ggtitle("Distribution of Voter groups by Issue & Loyalty") +
-  xlab("Response") + ylab("Number of voters") +
+  xlab("Response") + ylab("Proportion of voters (%)") +
   theme_bw()
 
 ggplot(WTHH.long[WTHH.long$response != 6 & (WTHH.long$grp=="Loyal Republicans" | WTHH.long$grp=="Swing voters"),], aes(x=response, color = grp, fill = grp)) +
@@ -148,7 +148,7 @@ ggplot(WTHH.long[WTHH.long$response != 6 & (WTHH.long$grp=="Loyal Republicans" |
   guides(fill = guide_legend(title="Swing Voters"), color = FALSE) +
   labs(fill="Voter group", caption="Values: 1. Strongly support  2. Somewhat support  3. Neither support nor oppose \n  4. Somewhat oppose  5. Strongly oppose") +
   ggtitle("Distribution of Voter groups by Issue & Loyalty") +
-  xlab("Response") + ylab("Number of voters") +
+  xlab("Response") + ylab("Proportion of voters (%)") +
   theme_bw()
 ```
 
